@@ -6,7 +6,7 @@ import torch
 import os
 import json
 
-RES_PATH = 'data/results.json'
+RES_PATH = 'data/results_old.json'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

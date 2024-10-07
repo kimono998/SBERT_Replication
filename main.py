@@ -8,14 +8,15 @@ from data_utils import *
 from eval import test
 
 STS_DATASETS = {'sts_12': 'mteb/sts12-sts',
-            'sts_13': 'mteb/sts13-sts',
-            'sts_14': 'mteb/sts14-sts',
-            'sts_15': 'mteb/sts15-sts',
-            'sts_16': 'mteb/sts16-sts',
-            'sts_b': 'mteb/stsbenchmark-sts'
-            }
+                'sts_13': 'mteb/sts13-sts',
+                'sts_14': 'mteb/sts14-sts',
+                'sts_15': 'mteb/sts15-sts',
+                'sts_16': 'mteb/sts16-sts',
+                'sts_b': 'mteb/stsbenchmark-sts'
+                }
 
-SEEDS = [0,1,2,3,4,5,6,7,8,9]
+SEEDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
 
 # use
 # train base bert on nli.
@@ -25,39 +26,47 @@ def train_nli(name):
     _, test_dataloader = get_sts_data('mteb/stsbenchmark-sts', 42)
     base_model = BertModel.from_pretrained("bert-base-uncased")
     mod = SBert_Classification_Objective(base_model)
-    trained_model = training(model = mod,
-                             train_dataloader = train_dataloader,
-                             val_dataloader = test_dataloader,
+    trained_model = training(model=mod,
+                             train_dataloader=train_dataloader,
+                             val_dataloader=test_dataloader,
                              sts_eval=True,
-                             name = f'{name}'
+                             name=f'{name}'
                              )
-    test(model=trained_model, test_dataloader=test_dataloader, model_name = f'{name}', dataset_name='STSb')
+    test(model=trained_model, test_dataloader=test_dataloader, model_name=f'{name}', dataset_name='STSb')
 
 
 # train base bert or nli bert on stsb dataset.
-def stsb_w_seeds(base_model = None, name = 'BERT_NO_NLI_STSb_SEED_'):
-
+def stsb_w_seeds(foundation_model_path=None, name='BERT_NO_NLI_STSb_SEED_'):
     for seed in SEEDS:
-        if not base_model:
+
+        if not foundation_model_path:
             base_model = BertModel.from_pretrained("bert-base-uncased")
+        else:
+            base_model = BertModel.from_pretrained("bert-base-uncased")
+            base_model.load_state_dict(torch.load(foundation_model_path))
 
         mod = SBert_Regression_Objective(base_model=base_model)
 
         train_dataloader, test_dataloader = get_sts_data('mteb/stsbenchmark-sts', seed)
 
-        mod = training(model = mod,
-                         train_dataloader=train_dataloader,
-                         val_dataloader = test_dataloader,
-                         mode = 'sim',
-                         name = f'{name}{seed}',
-                         num_epochs=4)
-        test(model=mod, test_dataloader=test_dataloader, model_name = f'{name}{seed}', dataset_name = 'STSb')
+        mod = training(model=mod,
+                       train_dataloader=train_dataloader,
+                       val_dataloader=test_dataloader,
+                       mode='sim',
+                       name=f'{name}{seed}',
+                       num_epochs=4)
+        test(model=mod, test_dataloader=test_dataloader, model_name=f'{name}{seed}', dataset_name='STSb')
+        base_model = None  # reset the base model
+
+        # Explicitly delete the model and clear the GPU memory if using CUDA
+        del mod
+        del base_model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 
 # evaluate with multiple seeds on all sts datasets
-def eval_all_sts(base_model = None, name = 'None'):
-
-
+def eval_all_sts(base_model=None, name='None'):
     for dataset in STS_DATASETS.keys():
         for seed in SEEDS:
             if not base_model:
@@ -71,13 +80,13 @@ def eval_all_sts(base_model = None, name = 'None'):
             except:
                 print(f'Error occured, could not evaluate on {dataset} for seed {seed}')
 
-def  main():
 
-    # train NLI bert
-    train_nli('SBERT_NLI_V0')
+def main():
     # with 10 seeds
     # train no nli sbert on stsb
     stsb_w_seeds(name='BERT_NO_NLI_STSb_V0_SEED_')
+    # train NLI bert
+    train_nli('SBERT_NLI_V0')
     # with 10 seeds
     # train nli sbert on stsb
 
@@ -85,6 +94,7 @@ def  main():
     # evaluate noNli_sbert_noStsb, nli_sbert_stsb, nli_sbert_no_stsb, and noNli_sbert_stsb on all stsb datasets
 
     # do sent eval
+
 
 # # import datasets
 # def main():
@@ -107,9 +117,6 @@ def  main():
 #     # Train NLI -> Done
 #     # Train STSb ONLY -> TBD (10 seeds)
 #     # Train STSb w NLI -> TBD (10 seeds)
-
-
-
 
 
 if __name__ == "__main__":
