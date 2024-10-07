@@ -1,0 +1,10 @@
+/data/
+/checkpoints/
+/test.ipynb
+/.idea/vcs.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/PTM.iml
+/notinuse.py
